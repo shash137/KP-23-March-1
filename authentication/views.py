@@ -80,9 +80,10 @@ def index(request):
                     for p in v:
                         if flag==1:
                             v =  "\n"+k.upper() + " : "  + p
+                            flag=0
                         else:
-                            flag = 0
-                            v += "\n" + p 
+                            #flag = 0
+                            v += ", " + p 
                 else:
                     v = v.replace(".","")
                     v = "\n"+k.upper() + " : " + v 
@@ -265,33 +266,80 @@ def contribute(request):
         # session.run(q2)
         # session.run(q1)
 
+        generateTags(pdescription,psummary)
+        p2=""
+        for i in products:
+            p2+=i+","
+        p2=p2[:-1]
+        #contri_to_neo(pdescription,psummary,products, kanalysis,kinsisghts,owner,ptype, uniqueId2,finaltags)
+        contri_to_neo(pdescription,psummary,p2, kanalysis,kinsisghts,owner,ptype, uniqueId2,finaltags)
         messages.success(request, 'Your message has been sent!')
-        return redirect('filltags')
+        return redirect("home")
     return render(request, 'authentication/contribute.html')
 
-def contribute_neo4j(request):
-    global ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,powner,pptype, uniqueId2,finaltags
+def generateTags(a,b):   
+    s =  a+b
+    print(s)
+    s = s.lower()
+    
+    keywords=["data", "connect", "bi", " Freshdesk", "arcESB", "IPaas", "cdata", "driver", "neo4j", "django", "server", "data", " error", "jira" ,"salesforce"," sync", "python", "java", "sync", "server", "port", "error", "dict", "apache"]
+    for k in range(0,len(keywords)):
+        keywords[k] = keywords[k].lower()
+
+    print("Knowledge Given:")
+    arr = s.split(" ")
+
+    dic = {}
+    for w in arr:
+        dic[w] = arr.count(w)
+    
+    print(dic)
+
+    st = set(arr)
+    print("Suggested Tags for the given content are as follows:")
+    tags = {"tag" : []}
+    for w in st:
+        w=w.lower()
+        if ',' in w:
+            w=w[:-1]
+        if w in keywords:
+            w = w.upper()
+            print(w)
+            tags["tag"].append(w)
+        print(tags)     
+        global taggs
+        taggs = tags
+        print("global",taggs)   
+        global finaltags
+        finaltags=taggs["tag"]
+        global uniqueId2
+        conn=MongoClient()
+        db=conn.Lucid
+        collection=db.knowledge
+        print(uniqueId2,finaltags, "uid h ye")
+        db.knowledge.update({'ID':uniqueId2},{"$set": {'tags':finaltags}})
+
+def contri_to_neo(ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,powner,pptype, uniqueId2,finaltags):
+    #global ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,powner,pptype, uniqueId2,finaltags
     final_Tags=""
     for i in finaltags:
-        final_Tags+=i+","
+        final_Tags+=i+","  
+
     
+    #added neo4j database
+    neo4j_create_statemenet = "create (a: Problem{name:'%s'}), (k:Owner {owner:'%s'}), (l:Problem_Type{type:'%s'}),(m:Problem_Summary{summary:'%s'}), (n:Probelm_Description{description:'%s'}),(o:Knowledge_Analysis{analysis:'%s'}), (p:Knowledge_Insights{kinsisghts:'%s'}), (a)-[:Owner]->(k), (a)-[:Problem_Type]->(l), (a)-[:Problem_Summary]->(m), (a)-[:Problem_Description]->(n), (a)-[:Knowledge_analysis]->(o), (a)-[:Knowledge_insights]->(p)"%("Problem",powner,pptype,ppsummary,ppdescription,pkanalysis,pkinsisghts)
+    graphdb=GraphDatabase.driver(uri = "bolt://localhost:7687", auth=("neo4j", "admin"))
+    session=graphdb.session()
+    q2='''Merge (kp:knowledge {pdescription: '%s', ptype: '%s', psummary: '%s',id: '%s' , kanalysis:'%s', kinsisghts:'%s', owner:'%s', products:'%s'})
+    WITH kp
+    UNWIND split('%s',',') AS tag
+    MERGE (t:final_Tags {tagname: tag})
+    MERGE (kp)-[:belongs_to]->(t)'''%(ppdescription,pptype,ppsummary,uniqueId2,pkanalysis,pkinsisghts,powner,pproducts,final_Tags[:-1])
+    q1=" match(n) return n "
 
-    if request.GET.get("contributeneo"):
-        #added neo4j database
-        neo4j_create_statemenet = "create (a: Problem{name:'%s'}), (k:Owner {owner:'%s'}), (l:Problem_Type{type:'%s'}),(m:Problem_Summary{summary:'%s'}), (n:Probelm_Description{description:'%s'}),(o:Knowledge_Analysis{analysis:'%s'}), (p:Knowledge_Insights{kinsisghts:'%s'}), (a)-[:Owner]->(k), (a)-[:Problem_Type]->(l), (a)-[:Problem_Summary]->(m), (a)-[:Problem_Description]->(n), (a)-[:Knowledge_analysis]->(o), (a)-[:Knowledge_insights]->(p)"%("Problem",powner,pptype,ppsummary,ppdescription,pkanalysis,pkinsisghts)
-        graphdb=GraphDatabase.driver(uri = "bolt://localhost:7687", auth=("neo4j", "admin"))
-        session=graphdb.session()
-        q2='''Merge (kp:knowledge {pdescription: '%s', ptype: '%s', psummary: '%s',id: '%s' , kanalysis:'%s', kinsisghts:'%s', owner:'%s', products:'%s'})
-        WITH kp
-        UNWIND split('%s',',') AS tag
-        MERGE (t:final_Tags {tagname: tag})
-        MERGE (kp)-[:belongs_to]->(t)'''%(ppdescription,pptype,ppsummary,uniqueId2,pkanalysis,pkinsisghts,powner,*pproducts,final_Tags[:-1])
-        q1=" match(n) return n "
+    session.run(q2)
+    session.run(q1)
 
-        session.run(q2)
-        session.run(q1)
-        return redirect("home")
-    return redirect(request,'authentication/filltags.html')
 
 def defects(request):
     conn = MongoClient()
@@ -423,7 +471,7 @@ def freshdeskdisplay(request):
 
 
 def jira(request):
-    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=TwlG9Hdm1xgFABAkByYJEDA5;Url=https://knowledgeplatform64.atlassian.net")
+    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=RWyh9HtYViX5FPu6czAEF99A;Url=https://knowledgeplatform64.atlassian.net")
     # cur = conn.execute("SELECT Summary, Id, Description FROM Issues where id=10000")
     if request.method == 'POST':
         bug_id = request.POST['jiraid']
@@ -588,52 +636,6 @@ def delete_data(request):
      messages.success(request, "Data Deleted Successfully")
      return render(request, "authentication/index.html")       
 
-
-def generate_tags(request):
-    if request.GET.get("gentags"):
-        s =  ppdescription + ppsummary
-        print(s)
-        s = s.lower()
-        
-        keywords=["data", "connect", "bi", " Freshdesk", "arcESB", "IPaas", "cdata", "driver", "neo4j", "django", "server", "data", " error", "jira" ,"salesforce"," sync", "python", "java", "sync", "server", "port", "error", "dict", "apache"]
-        for k in range(0,len(keywords)):
-            keywords[k] = keywords[k].lower()
-
-        print("Knowledge Given:")
-        arr = s.split(" ")
-
-        dic = {}
-        for w in arr:
-            dic[w] = arr.count(w)
-        
-        print(dic)
-
-        st = set(arr)
-        print("Suggested Tags for the given content are as follows:")
-        tags = {"tag" : []}
-        for w in st:
-            w=w.lower()
-            if ',' in w:
-                w=w[:-1]
-            if w in keywords:
-                w = w.upper()
-                print(w)
-                tags["tag"].append(w)
-        print(tags)     
-        global taggs
-        taggs = tags
-        print("global",taggs)   
-        global finaltags
-        finaltags=taggs["tag"]
-        global uniqueId2
-        conn=MongoClient()
-        db=conn.Lucid
-        collection=db.knowledge
-        print(uniqueId2,finaltags, "uid h ye")
-        db.knowledge.update({'ID':uniqueId2},{"$set": {'tags':finaltags}})
-        #return redirect("home")
-
-    return render(request,"authentication/filltags.html", taggs)
 
 rrrname=""
 def forget_password(request):

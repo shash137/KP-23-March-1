@@ -37,11 +37,7 @@ urlpatterns = [
    path('update_data', views.update_data, name="update_data"),
    path('delete_data', views.delete_data, name="delete_data"),
    path('zoho', views.Zoho, name = "zoho"),
-   path('delete_account', views.delete_account, name = "delete_account"),
-   path('generate_tags',views.generate_tags,name ="generate_tags"),
-   path('filltags',views.generate_tags, name="filltags"),
-   path('contribute_neo4j',views.contribute_neo4j, name="contribute_neo4j"),
-   
+   path('delete_account', views.delete_account, name = "delete_account"),   
    path('forget_password',views.forget_password,name='forget_password'),
    path('activate2/<uidb64>/<token>/', views.activate2, name="activate2"),
    path('change_password_form', views.change_password_form, name="change_password_form"),
