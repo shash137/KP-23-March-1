@@ -58,6 +58,7 @@ taggs=dict()
 finaltags=[]
 uniqueId2=""
 
+
 # Create your views here.
 def index(request):
     conn = MongoClient()
@@ -445,33 +446,37 @@ def activate(request, uidb64, token):
         return render(request, 'activation_failed.html')
 
 def freshdesk(request):
-    conn = mod2.connect("Domain=knowledgeplatform;  APIKey=OZ1JWc0QQielVNhYIFQ3;")
-    cmd = "SELECT Id, Subject, Description FROM Tickets"
-    cur = conn.execute(cmd)
-    rs = cur.fetchall()
-    for row in rs:
-    	print(row)
+    conn = mod2.connect("Domain=knowledgeplatform640;  APIKey=VdMbeOevbxFSUFS5mYJd;")
+    if request.method=="POST":
+        Id=request.POST.get('tid')
+        cmd = "SELECT Id, Subject, Description FROM Tickets where ID= ?"
+        params = [Id]
+        cur = conn.execute(cmd,params)
+        rs = cur.fetchall()
+        for row in rs:
+            print(row)
 
-    global d1
-    d1 = {'Id':[], 'Subject':[]}
+        global d1
+        d1 = {'Id':[], 'Summary':[], 'Description':[]}
 
-    for t in rs:
-        print("Hello")
-        d1['Id'].append(t[0]);
-        d1['Subject'].append(t[1]);
-    print(d1)
+        for t in rs:
+            print("Hello")
+            d1['Id'].append(t[0]);
+            d1['Summary'].append(t[1]);
+            d1['Description'].append(t[2]);
+        print(d1)
 
     return render(request,'knowledgepages/freshdesk.html')
 
 def freshdeskdisplay(request):
-    ml=zip(d1['Id'],d1['Subject'])
+    ml=zip(d1['Id'],d1['Summary'],d1['Description'])
     context={'ml':ml,}
     return render(request,'knowledgepages/freshdeskdisplay.html',context)
 
 
 
 def jira(request):
-    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=RWyh9HtYViX5FPu6czAEF99A;Url=https://knowledgeplatform64.atlassian.net")
+    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=;Url=https://knowledgeplatform64.atlassian.net")
     # cur = conn.execute("SELECT Summary, Id, Description FROM Issues where id=10000")
     if request.method == 'POST':
         bug_id = request.POST['jiraid']
@@ -739,3 +744,38 @@ def contribute_bug(request):
         messages.success(request, 'Your message has been sent!')
         return redirect('home')
     return render(request,'authentication/contribute_bug.html')
+
+
+def contribute_bug2(request):
+    global d1
+    psummary=d1['Summary'][0]
+    pdescription=d1['Description'][0]
+    bid=str(d1['Id'][0])
+    if request.method == "POST":
+        ptype=request.POST['ptype']
+        products=request.POST.getlist('CD')
+        kanalysis=request.POST['kanalysis']
+        kinsisghts=request.POST['kinsisghts']
+        owner=request.POST['owner']     
+        
+        
+        conn = MongoClient()
+        db=conn.Lucid
+        collection=db.knowledge
+        rec1={
+                  
+          "ptype":ptype,
+          "psummary":psummary,
+          "pdescription":pdescription,
+          "products":products,
+          "kanalysis":kanalysis,
+          "kinsisghts":kinsisghts,
+          "tags":finaltags,
+          "owner":owner,
+          "BugId":bid,
+          "ID" : owner[:3] + str(len(psummary)) + str(len(pdescription)) +str(len(kinsisghts) + len(kanalysis)),                 
+        }
+        collection.insert_one(rec1)
+        messages.success(request, 'Your message has been sent!')
+        return redirect('home')
+    return render(request,'authentication/contribute_bug2.html')
