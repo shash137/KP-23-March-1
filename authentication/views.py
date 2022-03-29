@@ -276,14 +276,14 @@ def contribute(request):
     
         # session.run(q2)
         # session.run(q1)
-
+        bgid="NA"
         generateTags(pdescription,psummary,kanalysis,kinsisghts,products)
         p2=""
         for i in products:
             p2+=i+","
         p2=p2[:-1]
         #contri_to_neo(pdescription,psummary,products, kanalysis,kinsisghts,owner,ptype, uniqueId2,finaltags)
-        contri_to_neo(pdescription,psummary,p2, kanalysis,kinsisghts,owner,ptype, uniqueId2,finaltags)
+        contri_to_neo(pdescription,psummary,p2, kanalysis,kinsisghts,owner,ptype, uniqueId2,finaltags,bgid)
         messages.success(request, 'Your message has been sent!')
         return redirect("home")
     return render(request, 'authentication/contribute.html')
