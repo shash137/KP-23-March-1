@@ -133,10 +133,11 @@
               
         
               
-              {% for i,j,k in ml%}
+              {% for i,j,k,l in ml%}
            <h5> <b>BugId</b> : {{j}}<br><br></h5>
            <h5> <b>Summary</b> : {{i}}<br><br></h5>
            <h5> <b>Description</b> : {{k}}<br><br></h5>
+           <h5> <b>Assignee</b> : {{l}}<br><br></h5>
            
           </form>
            {% endfor %}
