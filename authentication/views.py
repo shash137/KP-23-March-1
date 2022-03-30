@@ -51,7 +51,7 @@ nltk.download('punkt')
 stop_words = list(set(stopwords.words('english')))
 
 
-gfName=""
+global_First_Name=""
 uniqueId=""
 uName=""
 emailId=""
@@ -71,12 +71,13 @@ uniqueId2=""
 
 # Create your views here.
 def index(request):
+    #making a conn variable to connect with database
     conn = MongoClient()
-    db=conn.Lucid
-    collection=db.knowledge
+    db=conn.Lucid  #lucid is our database name
+    collection=db.knowledge   #knowledge is collection name
     coll =collection.find()
-    a = {'defectdata': coll.clone()}
-    new_data_dic = {}
+    a = {'defectdata': coll.clone()}    #making a dictionary for display purpose
+    new_data_dic = {}   # making this dictionary for pagination
     key = 1
     i = 0
     # list_of_attributes = ["ptype", "psummary", "pdescription","products","kanalysis","kinsisghts","tags","owner","ID"]
@@ -86,6 +87,7 @@ def index(request):
         new_data_dic[keys] = lst
         for k,v in doc.items():
             if k!='_id':
+                # for products mapped and tags as they are not string but list type
                 if type(v) == list :
                     flag = 1
                     for p in v:
@@ -100,22 +102,15 @@ def index(request):
                     v = "\n"+k.upper() + " : " + v 
                 new_data_dic[keys].append(v)
         key+=1      
-        
-    # all_data_dic = {'_id':[],'date_of_entry':[],'date_of_login':[],'ptype':[],'support Ticket':[],'psummary':[],'pdescription':[],'products':[],'kanalysis':[],'kinsisghts':[],'tags':[],'owner':[],'ID':[]}
-    # for collection in coll:
-    #     for k,v in collection.items():
-    #         if k in all_data_dic  and k!='_id':
-    #             all_data_dic[k].append(v)
 
     dataJSON = dumps(new_data_dic)
 
 
     return render(request, "authentication/index.html", {'data': dataJSON})
-def about(request):
-    return render(request, 'authentication/about.html') 
+
 
 def signup(request):
-    
+    # method is post so that platform can get details from user
     if request.method == "POST":
         # global username 
         username = request.POST.get('username')
@@ -124,6 +119,8 @@ def signup(request):
         email = request.POST['email']
         pass1 = request.POST['pass1']
         
+
+        #several exceptions for validation 
         if User.objects.filter(username=username):
             messages.error(request, "Username already exist! Please try some other username")
             return redirect('home')
@@ -131,14 +128,6 @@ def signup(request):
         if User.objects.filter(email=email):
             messages.error(request, "Email already registered!")
             return redirect('home')
-        
-        # if len(username)>10:
-        #     messages.error(request, "Username must be under 10 characters")
-            
-            
-        # if not username.isalnum():
-        #     messages.error(request, "Username must be Alpha-Numeric!")
-        #     return redirect('home')
         
      
         myuser = User.objects.create_user(username, email, pass1)
@@ -153,12 +142,7 @@ def signup(request):
 
         
         messages.success(request, " We have sent account activation link to your registered mail id. Kindly click on the link to activate your account .")
-        
-        
-        #welcome email
-        
-        
-        
+                
         
         #Email Address confirmation email
         
@@ -186,9 +170,9 @@ def signup(request):
 
 
 def delete_account(request):
-    global uName
+    global uName #taking username from signin
     print(uName)
-    global emailId
+    global emailId #taking email from signin
     print(emailId)
     user = User.objects.get(username = uName)
     user.delete()
@@ -210,6 +194,8 @@ def delete_account(request):
     return redirect('home')
 
 def contribute(request):
+    #taking data from user for various attributes of knowledge
+
     if request.method == "POST":
         ptype=request.POST['ptype']
         psummary=request.POST['psummary']
@@ -237,10 +223,8 @@ def contribute(request):
         conn = MongoClient()
         db=conn.Lucid
         collection=db.knowledge
-        # username=signup.username
         
-        # # if datetime_logout1 is None:
-        #     datetime_logout1=0  
+        #making a collection to send to mongo database
         rec1={
         #   "username":username1,          
           "ptype":ptype,
@@ -253,9 +237,10 @@ def contribute(request):
           "owner":owner,
           "ID" : owner[:3] + str(len(psummary)) + str(len(pdescription)) +str(len(kinsisghts) + len(kanalysis)),          
 
-       
         }
+
         global uniqueId2
+        #making a unique id for indexing purpose
         uniqueId2=owner[:3] + str(len(psummary)) + str(len(pdescription)) +str(len(kinsisghts) + len(kanalysis))
         collection.insert_one(rec1)
         tags_string=""
@@ -263,19 +248,6 @@ def contribute(request):
             tags_string+=i+","   
         print(finaltags,"finaaaaaaaaal",tags_string)     
 
-        # #added neo4j database
-        # neo4j_create_statemenet = "create (a: Problem{name:'%s'}), (k:Owner {owner:'%s'}), (l:Problem_Type{type:'%s'}),(m:Problem_Summary{summary:'%s'}), (n:Probelm_Description{description:'%s'}),(o:Knowledge_Analysis{analysis:'%s'}), (p:Knowledge_Insights{kinsisghts:'%s'}), (a)-[:Owner]->(k), (a)-[:Problem_Type]->(l), (a)-[:Problem_Summary]->(m), (a)-[:Problem_Description]->(n), (a)-[:Knowledge_analysis]->(o), (a)-[:Knowledge_insights]->(p)"%("Problem",owner,ptype,psummary,pdescription,kanalysis,kinsisghts)
-        # graphdb=GraphDatabase.driver(uri = "bolt://localhost:7687", auth=("neo4j", "admin"))
-        # session=graphdb.session()
-        # q2='''Merge (kp:knowledge {pdescription: '%s', ptype: '%s', psummary: '%s',id: '%s' , kanalysis:'%s', kinsisghts:'%s', owner:'%s', products:'%s'})
-        # WITH kp
-        # UNWIND split('%s',',') AS tag
-        # MERGE (t:tags_string {tagname: tag})
-        # MERGE (kp)-[:belongs_to]->(t)'''%(pdescription,ptype,psummary,uniqueId2,kanalysis,kinsisghts,owner,*products,finaltags)
-        # q1=" match(n) return n "
-    
-        # session.run(q2)
-        # session.run(q1)
         bgid="NA"
         generateTags(pdescription,psummary,kanalysis,kinsisghts,products)
         p2=""
@@ -289,40 +261,41 @@ def contribute(request):
     return render(request, 'authentication/contribute.html')
 
 def generateTags(a,b,c,d,products):   
-    st = ["weren't", 'needn', "mustn't", "needn't", 'haven', "wouldn't", 'most', 'only', 'down', 'over', 'mightn', 'where', 'this', 'your', "shouldn't", "you'll", 'so', 'weren', 'will', 'hadn', 'hasn', 'i', 'no', 'which', 'has', 'those', 'itself', 'they', 'whom', 'that', 'isn', 'couldn', 'as', 'doesn', "haven't", 'other', 'too', 'than', 'is', 'his', "don't", 'mustn', 'she', 'just', "hadn't", 'through', 'been', 'an', 'with', 'more', 'from', 'few', 'how', 'own', 't', 'were', 'being', 'above', 'both', 'it', "hasn't", 'these', 'wouldn', 'during', 'our', 'didn', 'all', 'should', "didn't", 'further', 'or', 'have', 'in', 'her', 'here', 'yourselves', 'did', 'a', 'its', 'of', 'about', "couldn't", "should've", 'after', 'some', 'the', 'at', 'be', 'aren', 'each', 'shan', 'won', 'he', 'my', 'why', 've', 'same', "doesn't", 's', 'up', 'now', 'ain', 'we', "shan't", 'what', 'below', 'then', 'such', "mightn't", 'me', 'out', 'do', "she's", 'm', "it's", "that'll", "isn't", 'y', 'yours', 'against', 'into', 'herself', 'under', 'who', 'wasn', 'by', "aren't", 'any', 'are', 'does', 'but', 'because', 'and', 'doing', 'until', 'off', 'very', "you'd", 'ourselves', 'was', 'once', 're', 'between', 'him', 'd', 'myself', 'can', 'ma', 'if', 'for', 'yourself', 'o', 'them', 'am', "you've", 'nor', 'don', 'you', 'when', 'had', 'on', 'not', "wasn't", "won't", 'ours', 'before', 'while', 'himself', 'themselves', 'shouldn', "you're", 'to', 'having', 'their', 'again', 'theirs', 'there', 'hers', 'll', ' able', 'about', 'above', 'abroad', 'according', 'accordingly', 'across', 'actually', 'adj', 'after', 'afterwards', 'again', 'against', 'ago', 'ahead', "ain't", 'all', 'allow', 'allows', 'almost', 'alone', 'along', 'alongside', 'already', 'also', 'although', 'always', 'am', 'amid', 'amidst', 'among', 'amongst', 'an', 'and', 'another', 'any', 'anybody', 'anyhow', 'anyone', 'anything', 'anyway', 'anyways', 'anywhere', 'apart', 'appear', 'appreciate', 'appropriate', 'are', "aren't", 'around', 'as', "a's", 'aside', 'ask', 'asking', 'associated', 'at', 'available', 'away', 'awfully', 'back', 'backward', 'backwards', 'be', 'became', 'because', 'become', 'becomes', 'becoming', 'been', 'before', 'beforehand', 'begin', 'behind', 'being', 'believe', 'below', 'beside', 'besides', 'best', 'better', 'between', 'beyond', 'both', 'brief', 'but', 'by', 'came', 'can', 'cannot', 'cant', "can't", 'caption', 'cause', 'causes', 'certain', 'certainly', 'changes', 'clearly', "c'mon", 'co', 'co.', 'com', 'come', 'comes', 'concerning', 'consequently', 'consider', 'considering', 'contain', 'containing', 'contains', 'corresponding', 'could', "couldn't", 'course', "c's", 'currently', 'dare', "daren't", 'definitely', 'described', 'despite', 'did', "didn't", 'different', 'directly', 'do', 'does', "doesn't", 'doing', 'done', "don't", 'down', 'downwards', 'during', 'each', 'edu', 'eg', 'eight', 'eighty', 'either', 'else', 'elsewhere', 'end', 'ending', 'enough', 'entirely', 'especially', 'et', 'etc', 'even', 'ever', 'evermore', 'every', 'everybody', 'everyone', 'everything', 'everywhere', 'ex', 'exactly', 'example', 'except', 'fairly', 'far', 'farther', 'few', 'fewer', 'fifth', 'first', 'five', 'followed', 'following', 'follows', 'for', 'forever', 'former', 'formerly', 'forth', 'forward', 'found', 'four', 'from', 'further', 'furthermore', 'get', 'gets', 'getting', 'given', 'gives', 'go', 'goes', 'going', 'gone', 'got', 'gotten', 'greetings', 'had', "hadn't", 'half', 'happens', 'hardly', 'has', "hasn't", 'have', "haven't", 'having', 'he', "he'd", "he'll", 'hello', 'help', 'hence', 'her', 'here', 'hereafter', 'hereby', 'herein', "here's", 'hereupon', 'hers', 'herself', "he's", 'hi', 'him', 'himself', 'his', 'hither', 'hopefully', 'how', 'howbeit', 'however', 'hundred', "i'd", 'ie', 'if', 'ignored', "i'll", "i'm", 'immediate', 'in', 'inasmuch', 'inc', 'inc.', 'indeed', 'indicate', 'indicated', 'indicates', 'inner', 'inside', 'insofar', 'instead', 'into', 'inward', 'is', "isn't", 'it', "it'd", "it'll", 'its', "it's", 'itself', "i've", 'just', 'k', 'keep', 'keeps', 'kept', 'know', 'known', 'knows', 'last', 'lately', 'later', 'latter', 'latterly', 'least', 'less', 'lest', 'let', "let's", 'like', 'liked', 'likely', 'likewise', 'little', 'look', 'looking', 'looks', 'low', 'lower', 'ltd', 'made', 'mainly', 'make', 'makes', 'many', 'may', 'maybe', "mayn't", 'me', 'mean', 'meantime', 'meanwhile', 'merely', 'might', "mightn't", 'mine', 'minus', 'miss', 'more', 'moreover', 'most', 'mostly', 'mr', 'mrs', 'much', 'must', "mustn't", 'my', 'myself', 'name', 'namely', 'nd', 'near', 'nearly', 'necessary', 'need', "needn't", 'needs', 'neither', 'never', 'neverf', 'neverless', 'nevertheless', 'new', 'next', 'nine', 'ninety', 'no', 'nobody', 'non', 'none', 'nonetheless', 'noone', 'no-one', 'nor', 'normally', 'not', 'nothing', 'notwithstanding', 'novel', 'now', 'nowhere', 'obviously', 'of', 'off', 'often', 'oh', 'ok', 'okay', 'old', 'on', 'once', 'one', 'ones', "one's", 'only', 'onto', 'opposite', 'or', 'other', 'others', 'otherwise', 'ought', "oughtn't", 'our', 'ours', 'ourselves', 'out', 'outside', 'over', 'overall', 'own', 'particular', 'particularly', 'past', 'per', 'perhaps', 'placed', 'please', 'plus', 'possible', 'presumably', 'probably', 'provided', 'provides', 'que', 'quite', 'qv', 'rather', 'rd', 're', 'really', 'reasonably', 'recent', 'recently', 'regarding', 'regardless', 'regards', 'relatively', 'respectively', 'right', 'round', 'said', 'same', 'saw', 'say', 'saying', 'says', 'second', 'secondly', 'see', 'seeing', 'seem', 'seemed', 'seeming', 'seems', 'seen', 'self', 'selves', 'sensible', 'sent', 'serious', 'seriously', 'seven', 'several', 'shall', "shan't", 'she', "she'd", "she'll", "she's", 'should', "shouldn't", 'since', 'six', 'so', 'some', 'somebody', 'someday', 'somehow', 'someone', 'something', 'sometime', 'sometimes', 'somewhat', 'somewhere', 'soon', 'sorry', 'specified', 'specify', 'specifying', 'still', 'sub', 'such', 'sup', 'sure', 'take', 'taken', 'taking', 'tell', 'tends', 'th', 'than', 'thank', 'thanks', 'thanx', 'that', "that'll", 'thats', "that's", "that've", 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'thence', 'there', 'thereafter', 'thereby', "there'd", 'therefore', 'therein', "there'll", "there're", 'theres', "there's", 'thereupon', "there've", 'these', 'they', "they'd", "they'll", "they're", "they've", 'thing', 'things', 'think', 'third', 'thirty', 'this', 'thorough', 'thoroughly', 'those', 'though', 'three', 'through', 'throughout', 'thru', 'thus', 'till', 'to', 'together', 'too', 'took', 'toward', 'towards', 'tried', 'tries', 'truly', 'try', 'trying', "t's", 'twice', 'two', 'un', 'under', 'underneath', 'undoing', 'unfortunately', 'unless', 'unlike', 'unlikely', 'until', 'unto', 'up', 'upon', 'upwards', 'us', 'use', 'used', 'useful', 'uses', 'using', 'usually', 'v', 'value', 'various', 'versus', 'very', 'via', 'viz', 'vs', 'want', 'wants', 'was', "wasn't", 'way', 'we', "we'd", 'welcome', 'well', "we'll", 'went', 'were', "we're", "weren't", "we've", 'what', 'whatever', "what'll", "what's", "what've", 'when', 'whence', 'whenever', 'where', 'whereafter', 'whereas', 'whereby', 'wherein', "where's", 'whereupon', 'wherever', 'whether', 'which', 'whichever', 'while', 'whilst', 'whither', 'who', "who'd", 'whoever', 'whole', "who'll", 'whom', 'whomever', "who's", 'whose', 'why', 'will', 'willing', 'wish', 'with', 'within', 'without', 'wonder', "won't", 'would', "wouldn't", 'yes', 'yet', 'you', "you'd", "you'll", 'your', "you're", 'yours', 'yourself', 'yourselves', "you've", 'zero', 'a', "how's", 'i', "when's", "why's", 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'uucp', 'w', 'x', 'y', 'z', 'I', 'www', 'amount', 'bill', 'bottom', 'call', 'computer', 'con', 'couldnt', 'cry', 'de', 'describe', 'detail', 'due', 'eleven', 'empty', 'fifteen', 'fifty', 'fill', 'find', 'fire', 'forty', 'front', 'full', 'give', 'hasnt', 'herse', 'himse', 'interest', 'itse”', 'mill', 'move', 'myse”', 'part', 'put', 'show', 'side', 'sincere', 'sixty', 'system', 'ten', 'thick', 'thin', 'top', 'twelve', 'twenty', 'abst', 'accordance', 'act', 'added', 'adopted', 'affected', 'affecting', 'affects', 'ah', 'announce', 'anymore', 'apparently', 'approximately', 'aren', 'arent', 'arise', 'auth', 'beginning', 'beginnings', 'begins', 'biol', 'briefly', 'ca', 'date', 'ed', 'effect', 'et-al', 'ff', 'fix', 'gave', 'giving', 'heres', 'hes', 'hid', 'home', 'id', 'im', 'immediately', 'importance', 'important', 'index', 'information', 'invention', 'itd', 'keys', 'kg', 'km', 'largely', 'lets', 'line', "'ll", 'means', 'mg', 'million', 'ml', 'mug', 'na', 'nay', 'necessarily', 'nos', 'noted', 'obtain', 'obtained', 'omitted', 'ord', 'owing', 'page', 'pages', 'poorly', 'possibly', 'potentially', 'pp', 'predominantly', 'present', 'previously', 'primarily', 'promptly', 'proud', 'quickly', 'ran', 'readily', 'ref', 'refs', 'related', 'research', 'resulted', 'resulting', 'results', 'run', 'sec', 'section', 'shed', 'shes', 'showed', 'shown', 'showns', 'shows', 'significant', 'significantly', 'similar', 'similarly', 'slightly', 'somethan', 'specifically', 'state', 'states', 'stop', 'strongly', 'substantially', 'successfully', 'sufficiently', 'suggest', 'thered', 'thereof', 'therere', 'thereto', 'theyd', 'theyre', 'thou', 'thoughh', 'thousand', 'throug', 'til', 'tip', 'ts', 'ups', 'usefully', 'usefulness', "'ve", 'vol', 'vols', 'wed', 'whats', 'wheres', 'whim', 'whod', 'whos', 'widely', 'words', 'world', 'youd', 'youre', 'size', 'problem', 'set', 'include', 'custom', 'false', 'able', 'facing', 'issue', 'connecting', 'working', '', '#', '!', '@', '$', '%', '^', '·', '&', '', '(', ')', '', '-', '+', '=', '~', '`', ',', '.', '?', '/', ':', ';', 'execute', 'customer', 'wants', 'improve', 'information', 'like', 'create', 'high', 'contains', 'data', 'server', 'when', 'hi', 'hey', 'hello', 'error', 'good', 'user', 'add', 'attempt', 'we', 'lot', 'its', 'use', 'such', 'make', 'record', 'return', 'message', 'example', 'name', 'you', 'handling', 'found', 'that', 'received', 'getting', 'setting', 'large', 'small', 'tiny', 'huge', 'big', 'contain', 'made', 'new', 'address', 'attempt', 'please', 'hi,', 'hello,', 'hey,', 'so,', 'so', 'since', 'suggest', 'has', 'have', 'had', 'this', 'do', 'done', 'go', 'to', 'went', 'though', 'saved', 'although', 'generally', 'literally', 'enter', 'enters', 'center', 'same', 'if', 'else', 'for', 'while', '', '',"#", "!", "@", "$", "%", "^",'·', "&", "", "(", ")", "", "-", "+", "=", "~", "`",",", ".", "?","/", ":", ";", "execute", "customer", "wants", "improve",   "information","like","create", "high", "contains", "data", "server", "when", "hi", "hey", "hello", "error", "good" , "user", "add", "attempt", "we", "lot" , "its", "use", "such", "make", "record", "return", "message", "example", "name", "you", "handling", "found", "that", "received", "getting", "setting", "large", "small", "tiny", "huge", "big","contain", "made", "new", "address", "attempt","please","hi," ,"hello,","hey,","so,","so", "since", "suggest", "has", "have", "had", "this", "do", "done", "go", "to", "went", "though","saved", "although", "generally", "literally", "enter", "enters", "center", "same", "if", "else", "for", "while","heavy","asked", "share", "path",'maintain', 'multiple', 'place', 'templatefile','2020', '2021', 'longer', 'recognized', 'valid' ]
-
-    for w in st:
+    #stopwords for removing less important words from document
+    more_stop_words = ["weren't", 'needn', "mustn't",'8;', '2)on', "needn't", 'haven', "wouldn't", 'most', 'only', 'down', 'over', 'mightn', 'where', 'this', 'your', "shouldn't", "you'll", 'so', 'weren', 'will', 'hadn', 'hasn', 'i', 'no', 'which', 'has', 'those', 'itself', 'they', 'whom', 'that', 'isn', 'couldn', 'as', 'doesn', "haven't", 'other', 'too', 'inserting', 'running', 'showing', 'picking', '3)query', 'calllogs', '(outcome', 'starttime', 'endtime', 'than', 'is', 'his', "don't", 'mustn', 'she', 'just', "hadn't", 'through', 'been', 'an', 'with', 'more', 'from', 'few', 'how', 'own', 't', 'were','template', 'being', 'above', 'both', 'it', "hasn't", 'these', 'wouldn', 'during', 'our', 'didn', 'all', 'should', "didn't", 'further', 'or', 'have', 'in', 'her', 'here', 'yourselves', 'did', 'a', 'its', 'of', 'about', "couldn't", "should've", 'after', 'some', 'the', 'at', 'be', 'aren', 'each', 'shan', 'won', 'he', 'my', 'why', 've', 'same', "doesn't", 's', 'up', 'now', 'ain', 'we', "shan't", 'what', 'below', 'then', 'such', "mightn't", 'me', 'out', 'do', "she's", 'm', "it's", "that'll", "isn't", 'y', 'yours', 'against', 'into', 'herself', 'under', 'who', 'wasn', 'by', "aren't", 'any', 'are', 'does', 'but', 'because', 'and', 'doing', 'until', 'off', 'very', "you'd", 'ourselves', 'was', 'once', 're', 'between', 'him', 'd', 'myself', 'can', 'ma', 'if', 'for', 'yourself', 'o', 'them', 'am', "you've", 'nor', 'don', 'you', 'when', 'had', 'on', 'not', "wasn't", "won't", 'ours', 'before', 'while', 'himself', 'themselves', 'shouldn', "you're", 'to', 'having', 'their', 'again', 'theirs', 'there', 'hers', 'll', ' able', 'about', 'above', 'abroad', 'according', 'accordingly', 'across', 'actually', 'adj', 'after', 'afterwards', 'again', 'against', 'ago', 'ahead', "ain't", 'all', 'allow', 'allows', 'almost', 'alone', 'along', 'alongside', 'already', 'also', 'although', 'always', 'am', 'amid', 'amidst', 'among', 'amongst', 'an', 'and', 'another', 'any', 'anybody', 'anyhow', 'anyone', 'anything', 'anyway', 'anyways', 'anywhere', 'apart', 'appear', 'appreciate', 'appropriate', 'are', "aren't", 'around', 'as', "a's", 'aside', 'ask', 'asking', 'associated', 'at', 'available', 'away', 'awfully', 'back', 'backward', 'backwards', 'be', 'became', 'because', 'become', 'becomes', 'becoming', 'been', 'before', 'beforehand', 'begin', 'behind', 'being', 'believe', 'below', 'beside', 'besides', 'best', 'better', 'between', 'beyond', 'both', 'brief', 'but', 'by', 'came', 'can', 'cannot', 'cant', "can't", 'caption', 'cause', 'causes', 'certain', 'certainly', 'changes', 'clearly', "c'mon", 'co', 'co.', 'com', 'come', 'comes', 'concerning', 'consequently', 'consider', 'considering', 'contain', 'containing', 'contains', 'corresponding', 'could', "couldn't", 'course', "c's", 'currently', 'dare', "daren't", 'definitely', 'described', 'despite', 'did', "didn't", 'different', 'directly', 'do', 'does', "doesn't", 'doing', 'done', "don't", 'down', 'downwards', 'during', 'each', 'edu', 'eg', 'eight', 'eighty', 'either', 'else', 'elsewhere', 'end', 'ending', 'enough', 'entirely', 'especially', 'et', 'etc', 'even', 'ever', 'evermore', 'every', 'everybody', 'everyone', 'everything', 'everywhere', 'ex', 'exactly', 'example', 'except', 'fairly', 'far', 'farther', 'few', 'fewer', 'fifth', 'first', 'five', 'followed', 'following', 'follows', 'for', 'forever', 'former', 'formerly', 'forth', 'forward', 'found', 'four', 'from', 'further', 'furthermore', 'get', 'gets', 'getting', 'given', 'gives', 'go', 'goes', 'going', 'gone', 'got', 'gotten', 'greetings', 'had', "hadn't", 'half', 'happens', 'hardly', 'has', "hasn't", 'have', "haven't", 'having', 'he', "he'd", "he'll", 'hello', 'help', 'hence', 'her', 'here', 'hereafter', 'hereby', 'herein', "here's", 'hereupon', 'hers', 'herself', "he's", 'hi', 'him', 'himself', 'his', 'hither', 'hopefully', 'how', 'howbeit', 'however', 'hundred', "i'd", 'ie', 'if', 'ignored', "i'll", "i'm", 'immediate', 'in', 'inasmuch', 'inc', 'inc.', 'indeed', 'indicate', 'indicated', 'indicates', 'inner', 'inside', 'insofar', 'instead', 'into', 'inward', 'is', "isn't", 'it', "it'd", "it'll", 'its', "it's", 'itself', "i've", 'just', 'k', 'keep', 'keeps', 'kept', 'know', 'known', 'knows', 'last', 'lately', 'later', 'latter', 'latterly', 'least', 'less', 'lest', 'let', "let's", 'like', 'liked', 'likely', 'likewise', 'little', 'look', 'looking', 'looks', 'low', 'lower', 'ltd', 'made', 'mainly', 'make', 'makes', 'many', 'may', 'maybe', "mayn't", 'me', 'mean', 'meantime', 'meanwhile', 'merely', 'might', "mightn't", 'mine', 'minus', 'miss', 'more', 'moreover', 'most', 'mostly', 'mr', 'mrs', 'much', 'must', "mustn't", 'my', 'myself', 'name', 'namely', 'nd', 'near', 'nearly', 'necessary', 'need', "needn't", 'needs', 'neither', 'never', 'neverf', 'neverless', 'nevertheless', 'new', 'next', 'nine', 'ninety', 'no', 'nobody', 'non', 'none', 'nonetheless', 'noone', 'no-one', 'nor', 'normally', 'not', 'nothing', 'notwithstanding', 'novel', 'now', 'nowhere', 'obviously', 'of', 'off', 'often', 'oh', 'ok', 'okay', 'old', 'on', 'once', 'one', 'ones', "one's", 'only', 'onto', 'opposite', 'or', 'other', 'others', 'otherwise', 'ought', "oughtn't", 'our', 'ours', 'ourselves', 'out', 'outside', 'over', 'overall', 'own', 'particular', 'particularly', 'past', 'per', 'perhaps', 'placed', 'please', 'plus', 'possible', 'presumably', 'probably', 'provided', 'provides', 'que', 'quite', 'qv', 'rather', 'rd', 're', 'really', 'reasonably', 'recent', 'recently', 'regarding', 'regardless', 'regards', 'relatively', 'respectively', 'right', 'round', 'said', 'same', 'saw', 'say', 'saying', 'says', 'second', 'secondly', 'see', 'seeing', 'seem', 'seemed', 'seeming', 'seems', 'seen', 'self', 'selves', 'sensible', 'sent', 'serious', 'seriously', 'seven', 'several', 'shall', "shan't", 'she', "she'd", "she'll", "she's", 'should', "shouldn't", 'since', 'six', 'so', 'some', 'somebody', 'someday', 'somehow', 'someone', 'something', 'sometime', 'sometimes', 'somewhat', 'somewhere', 'soon', 'sorry', 'specified', 'specify', 'specifying', 'still', 'sub', 'such', 'sup', 'sure', 'take', 'taken', 'taking', 'tell', 'tends', 'th', 'than', 'thank', 'thanks', 'thanx', 'that', "that'll", 'thats', "that's", "that've", 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'thence', 'there', 'thereafter', 'thereby', "there'd", 'therefore', 'therein', "there'll", "there're", 'theres', "there's", 'thereupon', "there've", 'these', 'they', "they'd", "they'll", "they're", "they've", 'thing', 'things', 'think', 'third', 'thirty', 'this', 'thorough', 'thoroughly', 'those', 'though', 'three', 'through', 'throughout', 'thru', 'thus', 'till', 'to', 'together', 'too', 'took', 'toward', 'towards', 'tried', 'tries', 'truly', 'try', 'trying', "t's", 'twice', 'two', 'un', 'under', 'underneath', 'undoing', 'unfortunately', 'unless', 'unlike', 'unlikely', 'until', 'unto', 'up', 'upon', 'upwards', 'us', 'use', 'used', 'useful', 'uses', 'using', 'usually', 'v', 'value', 'various', 'versus', 'very', 'via', 'viz', 'vs', 'want', 'wants', 'was', "wasn't", 'way', 'we', "we'd", 'welcome', 'well', "we'll", 'went', 'were', "we're", "weren't", "we've", 'what', 'whatever', "what'll", "what's", "what've", 'when', 'whence', 'whenever', 'where', 'whereafter', 'whereas', 'whereby', 'wherein', "where's", 'whereupon', 'wherever', 'whether', 'which', 'whichever', 'while', 'whilst', 'whither', 'who', "who'd", 'whoever', 'whole', "who'll", 'whom', 'whomever', "who's", 'whose', 'why', 'will', 'willing', 'wish', 'with', 'within', 'without', 'wonder', "won't", 'would', "wouldn't", 'yes', 'yet', 'you', "you'd", "you'll", 'your', "you're", 'yours', 'yourself', 'yourselves', "you've", 'zero', 'a', "how's", 'i', "when's", "why's", 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'uucp', 'w', 'x', 'y', 'z', 'I', 'www', 'amount', 'bill', 'bottom', 'call', 'computer', 'con', 'couldnt', 'cry', 'de', 'describe', 'detail', 'due', 'eleven', 'empty', 'fifteen', 'fifty', 'fill', 'find', 'fire', 'forty', 'front', 'full', 'give', 'hasnt', 'herse', 'himse', 'interest', 'itse”', 'mill', 'move', 'myse”', 'part', 'put', 'show', 'side', 'sincere', 'sixty', 'system', 'ten', 'thick', 'thin', 'top', 'twelve', 'twenty', 'abst', 'accordance', 'act', 'added', 'adopted', 'affected', 'affecting', 'affects', 'ah', 'announce', 'anymore', 'apparently', 'approximately', 'aren', 'arent', 'arise', 'auth', 'beginning', 'beginnings', 'begins', 'biol', 'briefly', 'ca', 'date', 'ed', 'effect', 'et-al', 'ff', 'fix', 'gave', 'giving', 'heres', 'hes', 'hid', 'home', 'id', 'im', 'immediately', 'importance', 'important', 'index', 'information', 'invention', 'itd', 'keys', 'kg', 'km', 'largely', 'lets', 'line', "'ll", 'means', 'mg', 'million', 'ml', 'mug', 'na', 'nay', 'necessarily', 'nos', 'noted', 'obtain', 'obtained', 'omitted', 'ord', 'owing', 'page', 'pages', 'poorly', 'possibly', 'potentially', 'pp', 'predominantly', 'present', 'previously', 'primarily', 'promptly', 'proud', 'quickly', 'ran', 'readily', 'ref', 'refs', 'related', 'research', 'resulted', 'resulting', 'results', 'run', 'sec', 'section', 'shed', 'shes', 'showed', 'shown', 'showns', 'shows', 'significant', 'significantly', 'similar', 'similarly', 'slightly', 'somethan', 'specifically', 'state', 'states', 'stop', 'strongly', 'substantially', 'successfully', 'sufficiently', 'suggest', 'thered', 'thereof', 'therere', 'thereto', 'theyd', 'theyre', 'thou', 'thoughh', 'thousand', 'throug', 'til', 'tip', 'ts', 'ups', 'usefully', 'usefulness', "'ve", 'vol', 'vols', 'wed', 'whats', 'wheres', 'whim', 'whod', 'whos', 'widely', 'words', 'world', 'youd', 'youre', 'size', 'problem', 'set', 'include', 'custom', 'false', 'able', 'facing', 'issue', 'connecting', 'working', '', '#', '!', '@', '$', '%', '^', '·', '&', '*', '(', ')', '_', '-', '+', '=', '~', '`', ',', '.', '?', '/', ':', ';', 'execute', 'customer', 'wants', 'improve', 'information', 'like', 'create', 'high', 'contains', 'data', 'server', 'when', 'hi', 'hey', 'hello', 'error', 'good', 'user', 'add', 'attempt', 'we', 'lot', 'its', 'use', 'such', 'make', 'record', 'return', 'message', 'example', 'name', 'you', 'handling', 'found', 'that', 'received', 'getting', 'setting', 'large', 'small', 'tiny', 'huge', 'big', 'contain', 'made', 'new', 'address', 'attempt', 'please', 'hi,', 'hello,', 'hey,', 'so,', 'so', 'since', 'suggest', 'has', 'have', 'had', 'this', 'do', 'done', 'go', 'to', 'went', 'though', 'saved', 'although', 'generally', 'literally', 'enter', 'enters', 'center', 'same', 'if', 'else', 'for', 'while', '', '',"#", "!", "@", "$", "%", "^",'·', "&", "*", "(", ")", "_", "-", "+", "=", "~", "`",",", ".", "?","/", ":", ";", "execute", "customer", "wants", "improve",   "information","like","create", "high", "contains", "data", "server", "when", "hi", "hey", "hello", "error", "good" , "user", "add", "attempt", "we", "lot" , "its", "use", "such", "make", "record", "return", "message", "example", "name", "you", "handling", "found", "that", "received", "getting", "setting", "large", "small", "tiny", "huge", "big","contain", "made", "new", "address", "attempt","please","hi," ,"hello,","hey,","so,","so", "since", "suggest", "has", "have", "had", "this", "do", "done", "go", "to", "went", "though","saved", "although", "generally", "literally", "enter", "enters", "center", "same", "if", "else", "for", "while","heavy","asked", "share", "path",'maintain', 'multiple', 'place', 'templatefile','2020', '2021', 'longer', 'recognized', 'valid','code', 'returned', 'inquiry', 'property' ,'occurs', 'retrieving', 'object', 'checked','true', 'returns','handled', 'work', 'function','existing', 'migrate', 'planning', 'release', 'replace', 'bit', 'careful', '{',');','properly', 'updating', 'fetch', 'rahul',';','on']
+    for w in more_stop_words:
         stop_words.append(w)
     print("stop_words list contains "+str(len(stop_words))+" words")
 
+    #making a string from various attributes of knowledge
     s =  a+" " +b+" " +c+" " +d
-    for product in products:
-        s+=" " + product
+    
     print(s)
     doc = s.lower()
-#Making the test case optimised
+    
+    #Making the test case optimised
 
-    words = doc.split()
-    from nltk.stem.porter import PorterStemmer
-    # Reduce words to their stems
-    stemmed = [PorterStemmer().stem(w) for w in words]
-    print(set(stemmed))
+    for product in products:
+        doc+=" " + product
 
 
     doc = doc.lower()
-    doc = doc.replace(",","")
-    doc = doc.replace("'","")
-    doc = doc.replace('"', "")
-    doc = doc.replace('.',"")
+    doc = doc.replace(","," ")
+    doc = doc.replace("'"," ")
+    doc = doc.replace('"', " ")
+    doc = doc.replace(":"," ")
+    doc = doc.replace("="," ")
 
     # Step 1 : Find total words in the document
     total_words = doc.split()
     total_word_length = len(total_words)
     print(total_word_length)
+
     # Step 2 : Find total number of sentences
     total_sentences = tokenize.sent_tokenize(doc)
     total_sent_len = len(total_sentences)
     print(total_sent_len)
+
     # Step 3: Calculate TF for each word
     tf_score = {}
     for each_word in total_words:
@@ -363,11 +336,13 @@ def generateTags(a,b,c,d,products):
     tf_idf_score = {key: tf_score[key] * idf_score.get(key, 0) for key in tf_score.keys()} 
     print(tf_idf_score)
     # Get top N important words in the document
+    n = len(tf_idf_score)
+    tf_idf_score = dict(sorted(tf_idf_score.items(), key = itemgetter(1), reverse = True)[:n]) 
     
     print()
     print()
     print("The tags for the given doc are:")
-    map={}
+    
     result=[]
     c = 10
     for k in tf_idf_score.keys():
@@ -375,27 +350,25 @@ def generateTags(a,b,c,d,products):
         result.append(k)
 
     print(result)
-    c=0
-    for k in tf_idf_score.keys():
-        print(k)
-        c+=1
-        if c==5:
-            break
 
+
+    #making a dictionary for saving to database
     tags = {"tag" : []}
-    keywords = ['CData Drivers','Drivers','ArcESB','Connect', 'Sync', 'Server', 'CData ArcESB', 'CData Connect', 'CData Sync', 'CData Server', 'CData DBAmp', 'DBAmp' , 'connect', 'automate', 'integrate', ' java', 'python', 'sql', 'cypher', 'c', '.net', 'driver', 'cloud', 'sync', 'arcesb', 'odbc', 'jdbc', 'saas', 'delphi', 'sdk', 'tableau', 'ado.net', 'ssis', 'jira', 'zoho', 'salesforce', 'freshdesk', 'defect', 'support', ' enhancement', ' opportunity', 'api', 'server', 'dbamp', 'adp', 'aws', 'azure', 'crm', 'amazon', 'mongo', 'mongodb', ' cassandra', 'cockroachdb', 'dropbox', 'email', 'github', 'graphql', 'mysql', 'sqlite', 'bigdata', ' hadoop', 'netsuite', 'sap', 'oracle', 'shipstation', 'wordpress', 'zendesk', 'xml', 'sybase', 'slack', 'sharepoint', 'rest', 'redshift', 'postgre', 'postgresql', 'paypal', 'onedrive', 'kafka', 'hdfs', 'couchdb', 'cosmos', 'bugzilla', 'adp', 'act-on', 'acumatica', 'alfresco', 'athena', 'dynamodb', 'avalara', 'bigcommerce', 'bigquery', 'digitalocean', 'docusign', 'elastisearch', 'evernote', 'facebook', 'hbase', 'hubspot', 'harperdb', 'hpcc', 'ibm', 'ldap', 'myob', 'magento', 'mailchimp', 'mariadb', 'marketo', 'microsoft', 'odata', 'parquet', ' accounting', 'erp', 'nosql', ' collaboration', ' e-commerce', 'api', 'teradata', 'singlestore', 'impala', ' enterprisedb', 'marketing']
-    for k in range(0,len(keywords)):
-        keywords[k] = keywords[k].lower()
+    
+    # Comment out this if you want traditional tags
+    # keywords = ['CData Drivers','Drivers','ArcESB','Connect', 'Sync', 'Server', 'CData ArcESB', 'CData Connect', 'CData Sync', 'CData Server', 'CData DBAmp', 'DBAmp' , 'connect', 'automate', 'integrate', ' java', 'python', 'sql', 'cypher', 'c', '.net', 'driver', 'cloud', 'sync', 'arcesb', 'odbc', 'jdbc', 'saas', 'delphi', 'sdk', 'tableau', 'ado.net', 'ssis', 'jira', 'zoho', 'salesforce', 'freshdesk', 'defect', 'support', ' enhancement', ' opportunity', 'api', 'server', 'dbamp', 'adp', 'aws', 'azure', 'crm', 'amazon', 'mongo', 'mongodb', ' cassandra', 'cockroachdb', 'dropbox', 'email', 'github', 'graphql', 'mysql', 'sqlite', 'bigdata', ' hadoop', 'netsuite', 'sap', 'oracle', 'shipstation', 'wordpress', 'zendesk', 'xml', 'sybase', 'slack', 'sharepoint', 'rest', 'redshift', 'postgre', 'postgresql', 'paypal', 'onedrive', 'kafka', 'hdfs', 'couchdb', 'cosmos', 'bugzilla', 'adp', 'act-on', 'acumatica', 'alfresco', 'athena', 'dynamodb', 'avalara', 'bigcommerce', 'bigquery', 'digitalocean', 'docusign', 'elastisearch', 'evernote', 'facebook', 'hbase', 'hubspot', 'harperdb', 'hpcc', 'ibm', 'ldap', 'myob', 'magento', 'mailchimp', 'mariadb', 'marketo', 'microsoft', 'odata', 'parquet', ' accounting', 'erp', 'nosql', ' collaboration', ' e-commerce', 'api', 'teradata', 'singlestore', 'impala', ' enterprisedb', 'marketing']
+    # for k in range(0,len(keywords)):
+    #     keywords[k] = keywords[k].lower()
 
-    for w in s.split(" "):
-        w=w.lower()
-        x =w.upper()
-        if w in keywords and w not in tags["tag"] and x not in tags["tag"]:
-            w = w.upper()
-            print(w)
-            tags["tag"].append(w)
-        if len(tags["tag"])==3:
-            break 
+    # for w in s.split(" "):
+    #     w=w.lower()
+    #     x =w.upper()
+    #     if w in keywords and w not in tags["tag"] and x not in tags["tag"]:
+    #         w = w.upper()
+    #         print(w)
+    #         tags["tag"].append(w)
+    #     if len(tags["tag"])==3:
+    #         break 
 
     for k in tf_idf_score.keys():
         k = k.upper()
@@ -408,7 +381,7 @@ def generateTags(a,b,c,d,products):
 
      
 
-
+    #For sending tags to database
     print(tags)
     global taggs
     taggs = tags
@@ -499,13 +472,12 @@ def signin(request):
         if user is not None:
              login(request, user)
              fname = user.first_name
-             global gfName
+             global global_First_Name
              if '@' in fname:
                 s=fname.split('@')
-                gfName=s[0].capitallize()
+                global_First_Name=s[0].capitallize()
              else:
-                gfName=fname
-            #  gfName+=str(fname)
+                global_First_Name=fname
              current_user = {}
              global username1
              username1=username
@@ -582,7 +554,7 @@ def freshdeskdisplay(request):
 
 
 def jira(request):
-    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=gjZZs1cCw8efkMynPzt06E58;Url=https://knowledgeplatform64.atlassian.net")
+    conn = mod4.connect("User=knowledgeplatform64@gmail.com;APIToken=Ws7f12FDqg9MCO2WLDHw0AA2;Url=https://knowledgeplatform64.atlassian.net")
     # cur = conn.execute("SELECT Summary, Id, Description FROM Issues where id=10000")
     if request.method == 'POST':
         bug_id = request.POST['jiraid']
@@ -622,8 +594,9 @@ def jiradisplay(request):
     return render(request,'knowledgepages/jiradisplay.html',context)
 
 
+#This function is to make the connection to salesforce by using cdata salesforce driver
 def salesforce(request):
-    conn = mod3.connect("User='af@gcet.com';Password='admin123';Security Token='G7wSptekqNONY1L3hBSs9T27';")
+    conn = mod3.connect("User='af@gcet.com';Password='admin123';Security Token='G7wSptekqNONY1L3hBSs9T27';") #here we import salesforce by name of mod3
     cur = conn.execute("SELECT Name,BillingState, Id FROM Account")
     rs = cur.fetchall()
     print(rs)
@@ -642,34 +615,35 @@ def salesforce(request):
     return render(request, 'knowledgepages/salesforce.html')          
 
 
+#This function is used to display the tickets that are raised in salesforce
 def salesforcedisplay(request):
     mlt=zip(d2['name'],d2['billingState'],d2['id'])
     context={'mlt':mlt,}
     return render(request, 'knowledgepages/salesforcedisplay.html',context)
 
 
-
+#This function is used for full text search by using neo4j
 def search(request):
     # conn = MongoClient()
     # db=conn.Lucid
     # collection=db.knowledge
     if request.method=="POST":
         searched=request.POST['searched']
-    graphdb=GraphDatabase.driver(uri = "bolt://localhost:7687", auth=("neo4j", "admin"))
+    graphdb=GraphDatabase.driver(uri = "bolt://localhost:7687", auth=("neo4j", "admin")) #Connection to neo4j
     session=graphdb.session()
-    q3='''CALL db.index.fulltext.queryNodes("kpindex", "%s") YIELD node RETURN node''' %(searched)
+    q3='''CALL db.index.fulltext.queryNodes("kpindex", "%s") YIELD node RETURN node''' %(searched)   #This is fulltext search query
     nodes=session.run(q3) 
     # print(*nodes)
     # we are showing results on page name defect
     return render(request, 'knowledgepages/defect.html', {'nodes': nodes})
 
+#This function render the user to the page where user can see the knowledges that are contributed by him
 def your_Contribution(request):
     conn = MongoClient()
     db=conn.Lucid
-    collection=db.knowledge
+    collection=db.knowledge    
     
-    
-    owner = gfName
+    owner = gfName  #here gfName is global variable whose value is userfirstname
     print(owner)
     #login=Contribute.objects.filter(ptype__contains=searched) 
     defectdata =collection.find({'owner':owner})
@@ -682,6 +656,7 @@ def Zoho(request):
     return render(request, "authentication/zoho.html")   
 
 
+#This function is used to update knowledge by taking knowledge ID from user
 def update_contribution(request):
     conn=MongoClient()
     db=conn.Lucid
@@ -692,7 +667,7 @@ def update_contribution(request):
         uniqueId=kid
     return render(request,'authentication/update_contribution.html')    
 
-
+#This function render the user to the page where user can see knowledge for the particular knowledge ID he entered and have the option to update that knowledge
 def update_contribution_display(request):
     global uniqueId
     print(uniqueId)
@@ -702,6 +677,7 @@ def update_contribution_display(request):
     ourdata = collection.find({'ID':uniqueId})
     return render(request,'authentication/update_contribution_display.html',{'ourdata':ourdata.clone()})
 
+#This function update the knowledge of the particular knowledge ID entered by the user
 def update_data(request):
     global uniqueId
     # print("Inside update function",uniqueId)
@@ -738,15 +714,16 @@ def update_data(request):
         if(kinsisghts==""):
             kinsisghts=p6
 
-        db.knowledge.update({'ID':uniqueId},{'ID':uniqueId,'ptype':ptype,'psummary':psummary,'pdescription':pdescription,'products':products,'kanalysis':kanalysis,'kinsisghts':kinsisghts,'owner':gfName,'tags':finaltags})    
+        db.knowledge.update({'ID':uniqueId},{'ID':uniqueId,'ptype':ptype,'psummary':psummary,'pdescription':pdescription,'products':products,'kanalysis':kanalysis,'kinsisghts':kinsisghts,'owner':gfName,'tags':finaltags})    #update this knowledge in MongoDb
         messages.success(request, "Data Updated Successfully")
         p2=""
         for i in products:
             p2+=i+","
         p2=p2[:-1]
-        update_to_neo(pdescription,psummary,p2, kanalysis,kinsisghts,gfName,ptype, uniqueId)
+        update_to_neo(pdescription,psummary,p2, kanalysis,kinsisghts,gfName,ptype, uniqueId) #update this knowledge in neo4j
     return render(request, "authentication/index.html")       
 
+#This function is used to update data in neo4j when user update any knowledge
 def update_to_neo(ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,powner,pptype, uniqueId2):
     #global ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,powner,pptype, uniqueId2,finaltags
     
@@ -764,6 +741,7 @@ def update_to_neo(ppdescription,ppsummary,pproducts, pkanalysis,pkinsisghts,pown
     nodes=session.run(q3) 
 
 
+#This function is used to delete any knowledge from Mongodb and neo4j by knowledge Id
 def delete_data(request):
      global uniqueId
      conn = MongoClient()
@@ -780,7 +758,8 @@ def delete_data(request):
      return render(request, "authentication/index.html")
 
 
-rrrname=""
+rrrname="" #This variable stores the username when user clicks on forget password
+#This function is used when user forget password, then this function take username and send email to user register emailid to authenticate user
 def forget_password(request):
     if request.method=="POST":
         username=request.POST.get("username")
@@ -807,13 +786,14 @@ def forget_password(request):
             settings.EMAIL_HOST_USER,
             [user_obj.email],
         )
-            email.fail_silently = True
-            email.content_subtype = "html"
+            email.fail_silently = True  #If email not sent then site will not crash
+            email.content_subtype = "html" 
             email.send()
             messages.success(request, " We have sent link to your registered email for reset password.")
 
     return render(request,'authentication/forget_password.html')
 
+#This function is used to activate link which comes on email id when user clicks on forget password button
 def activate2(request, uidb64, token):
     
     try:
@@ -829,26 +809,30 @@ def activate2(request, uidb64, token):
     else:
         return render(request, 'activation_failed.html')
 
+
+#This function is used when user wants to change Password of his account
 def change_password_form(request):
-    global rrrname
-    global uName
+    global rrrname #if user is not logged in, it takes username from forgetpassword
+    global uName  #if user is logged in, it takes username from signin
     if(rrrname==""):
         rrrname=uName
     if request.method=="POST":
-        pass1=request.POST.get('pass1')
-        pass2=request.POST.get('pass2')
+        pass1=request.POST.get('pass1') #To get new password
+        pass2=request.POST.get('pass2') #To get again the same new password for authentication
         if(pass1!=pass2):
             messages.success(request,"Password not Matched")
             return render(request,"authentication/change_password_form.html")
         else:
-            user_obj=User.objects.get(username=rrrname)
-            user_obj.set_password(pass1)
+            user_obj=User.objects.get(username=rrrname)  
+            user_obj.set_password(pass1) #It sets the new password to pass1
             user_obj.save()
             messages.success(request,"Password changed Successfully")
             return render(request,"authentication/signin.html")
         
     return render(request,'authentication/change_password_form.html')
 
+
+#This function is used to contribute knowledge by using Jira
 def contribute_bug(request):
     global d
     psummary=d['Summary'][0]
@@ -860,7 +844,7 @@ def contribute_bug(request):
         kanalysis=request.POST['kanalysis']
         kinsisghts=request.POST['kinsisghts']
         owner=request.POST['owner']     
-        generateTags(pdescription,psummary)
+        generateTags(pdescription,psummary,kanalysis,kinsisghts,products)  
         p2=""
         for i in products:
             p2+=i+","
@@ -890,6 +874,8 @@ def contribute_bug(request):
         return redirect('home')
     return render(request,'authentication/contribute_bug.html')
 
+
+#This function is used to contribute knowledge by using freshdesk
 def contribute_bug2(request):
     global d1
     psummary=d1['Summary'][0]
@@ -900,8 +886,9 @@ def contribute_bug2(request):
         products=request.POST.getlist('CD')
         kanalysis=request.POST['kanalysis']
         kinsisghts=request.POST['kinsisghts']
-        owner=request.POST['owner']     
-        generateTags(pdescription,psummary)
+        owner=request.POST['owner']   
+        generateTags(pdescription,psummary,kanalysis,kinsisghts,products)  
+        
         p2=""
         for i in products:
             p2+=i+","
@@ -928,3 +915,8 @@ def contribute_bug2(request):
         messages.success(request, 'Your message has been sent!')
         return redirect('home')
     return render(request,'authentication/contribute_bug2.html')
+
+
+#This function is used to search knowledge by using tags
+def searching2(request):
+    return render(request,"authentication/searching2.html")
