@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+    <link rel="icon" href="https://klaindustries.com/wp-content/uploads/2017/07/Light-bulb-icon.png" width="300" height="300" type="image/icon type">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Searching2</title>
+    <style>
+        /* Add a black background color to the top navigation bar */
+        
+        .search-container {
+            max-width: 400px;
+            margin: 4px 4px 4px 4px;
+        }
+        
+        input[type="text"] {
+            display: inline;
+            width: 400px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #00a0ff;
+            padding: 10px;
+            border: 2px solid #00a0ff;
+        }
+        
+        .search-container form {
+            position: relative;
+        }
+        
+        .search-container form button {
+            position: relative;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 50px;
+            background: transparent;
+            border: transparent;
+            font-size: 20px;
+            color: #00a0ff;
+            cursor: pointer;
+            outline: 0;
+        }
+        
+        #ul {
+            list-style: none;
+            padding: 0;
+            margin: 10;
+        }
+        
+        #nav li {
+            display: inline;
+            padding: 10px 10px 10px 10px;
+            float: right;
+        }
+        
+        #nav li a {
+            text-decoration: none;
+            color: #00a0ff;
+            vertical-align: middle;
+            border: 2px solid grey;
+            background-color: white;
+        }
+        
+        #nav a:hover {
+            color: black;
+            background-color: yellow;
+        }
+        
+        .tags {
+            display: list-item;
+        }
+        
+        .header {
+            display: inline-block;
+            width: 100%;
+            border: 1px solid #00a0ff;
+        }
+        
+        .header1 {
+            display: inline-block;
+            width: 64%;
+            border: 1px solid #00a0ff;
+        }
+        
+        .playerOne {
+            float: left;
+        }
+        
+        .playerTwo {
+            float: right;
+        }
+        
+        #more {
+            display: none;
+        }
+        
+        #myBtn {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" id="sh">
+        <a class="navbar-brand" href="#"><img src="/static/29.png" height="40" width="120"></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/"><i class="fa fa-fw fa-home"></i>Home<span class="sr-only">(current)</span></a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/contribute">Contribute</a>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Filter Knowledges
+          </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="defects">Defects</a> {% comment %} Neo4j {% endcomment %}
+
+                        <a class="dropdown-item" href="enhancements">Enhancement</a>
+                        <a class="dropdown-item" href="opportunity">Opportunity</a>
+                        <a class="dropdown-item" href="supportticket">Support Ticket</a>
+                    </div>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="/" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Issue Tracking
+        </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="jira">Jira</a>
+                        <a class="dropdown-item" href="salesforce">Salesforce</a>
+                        <a class="dropdown-item" href="freshdesk">FreshDesk</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/searching2">Search2</a>
+                </li>
+
+            </ul>
+            <form class="form-inline my-2 my-lg-0" method=POST action={% url 'search'%}>
+                {%csrf_token%}
+                <input class="form-control mr-sm-2" type="search" placeholder="Search Knowledges" aria-label="Search" name="searched">
+                <button class="btn btn-outline-primary my-2 my-sm-0" type="submit"><i class="fa fa-fw fa-search"></i></button> &nbsp &nbsp&nbsp&nbsp
+            </form>
+
+        </div>
+        <div class="btn-group">
+            <img type="button" src="https://img.icons8.com/external-kiranshastry-lineal-kiranshastry/30/ffffff/external-user-interface-kiranshastry-lineal-kiranshastry-1.png" class="btn btn-primary" />
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+        <p style="display:inline">{{user.first_name}}</p>
+        <span class="visually-hidden"></span>
+      </button> {% if user.is_authenticated %}
+            <ul class="dropdown-menu">
+                {% comment %}
+                <li><a class="dropdown-item" href="/signup">Sign up</a></li> {% endcomment %} {% comment %}
+                <li><a class="dropdown-item" href="/signin">Sign in</a></li> {% endcomment %}
+                <li><a class="dropdown-item" href="/your_contribution" name="contri"> Your Contributions</a></li>
+                <li><a class="dropdown-item" id="change-password" href="/change_password_form">Change Password</a></li>
+                <li><a class="dropdown-item" href="/signout">Sign out</a></li>
+                <li><a class="dropdown-item" id="confirm-delete" href="/delete_account">Delete Account</a></li>
+            </ul>
+            {% else %}
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/signup">Sign up</a></li>
+                <li><a class="dropdown-item" href="/signin">Sign in</a></li>
+                <li><a class="dropdown-item" href="/zoho">Zoho</a></li>
+            </ul>
+            {% endif %}
+        </div>
+    </nav>
+    <center>
+        <div class="search-container" style="display:inline" ;>
+            <form method=POST action={% url 'search'%}>
+                {%csrf_token%}
+                <input type="text" placeholder="Search..." name="searched" id="searchitem" onkeyup="search_animal()">
+                <button class="btn btn-outline-primary my-2 my-sm-0" type="submit"><i class="fa fa-fw fa-search"></i></button>
+
+        </div>
+    </center>
+
+    <div class="header">
+        <div class="header1">
+            <div class="playerOne">
+                <br><br><br><br><br><br><br><br><br><br>
+                <center>
+                    <h2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Here comes the search results</h2>
+                </center>
+                <br><br><br><br><br><br>
+                <br><br><br>
+
+
+
+            </div>
+        </div>
+        <div class="playerTwo">
+            <div id="nav">
+                <ul id='list'>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <h2 class="btn btn-secondary">Tags</h2><br>
+                    <button type="submit" onclick="cg('1')" class="btn btn-primary" id="1" name="1" value="Apache">Apache</button>
+                    <button type="submit" onclick="cg('2')" class="btn btn-primary" id="2" name="2" value="svg">svg</button>
+                    <button type="submit" onclick="cg('3')" class="btn btn-primary" id="3" name="3" value="Connect">Connect</button>
+                    <button type="submit" onclick="cg('4')" class="btn btn-primary" id="4" name="4" value="Port">Port</button><br><br>
+                    <button type="submit" onclick="cg('5')" class="btn btn-primary" id="5" name="5" value="CData">CData</button>
+                    <button type="submit" onclick="cg('6')" class="btn btn-primary" id="6" name="6" value="Driver">Driver</button>
+                    <button type="submit" onclick="cg('7')" class="btn btn-primary" id="7" name="7" value="neo4j">neo4j</button>
+                    <button type="submit" onclick="cg('8')" class="btn btn-primary" id="8" name="8" value="Jira">Jira</button><br><br>
+                    <button type="submit" onclick="cg('9')" class="btn btn-primary" id="9" name="9" value="IPaas">IPaas</button>
+                    <button type="submit" onclick="cg('10')" class="btn btn-primary" id="10" name="10" value="ArcEsB">ArcEsb</button>
+                    <button type="submit" onclick="cg('11')" class="btn btn-primary" id="11" name="11" value="Sync">Sync</button>
+                    <button type="submit" onclick="cg('12')" class="btn btn-primary" id="12" name="12" value="Server">Server</button><br><br>
+                    <button type="submit" onclick="cg('13')" class="btn btn-primary" id="13" name="13" value="automate">automate</button>
+                    <button type="submit" onclick="cg('14')" class="btn btn-primary" id="14" name="14" value="integrate">Integrate</button>
+                    <button type="submit" onclick="cg('15')" class="btn btn-primary" id="15" name="15" value="Java">Java</button>
+                    <button type="submit" onclick="cg('16')" class="btn btn-primary" id="16" name="16" value="Python">Python</button><br><br>
+                    <button type="submit" onclick="cg('17')" class="btn btn-primary" id="17" name="17" value="sql">SQL</button>
+                    <button type="submit" onclick="cg('18')" class="btn btn-primary" id="18" name="18" value="cypher">Cypher</button>
+                    <button type="submit" onclick="cg('19')" class="btn btn-primary" id="19" name="19" value=".net">.net</button>
+                    <button type="submit" onclick="cg('20')" class="btn btn-primary" id="20" name="20" value="cloud">Cloud</button><br><br>
+                    <span id="dots">....</span><br><span id="more">
+    <button type="submit" onclick="cg('21')" class="btn btn-primary" id="21" name="21" value="odbc">ODBC</button>
+    <button type="submit" onclick="cg('22')" class="btn btn-primary" id="22" name="22" value="jdbc">JDBC</button>
+    <button type="submit" onclick="cg('23')" class="btn btn-primary" id="23" name="23" value="saas">Saas</button>
+    <button type="submit" onclick="cg('24')" class="btn btn-primary" id="24" name="24" value="delphi">Delphi</button><br><br>
+    <button type="submit" onclick="cg('25')" class="btn btn-primary" id="25" name="25" value="sdk">SDK</button>
+    <button type="submit" onclick="cg('26')" class="btn btn-primary" id="26" name="26" value="tableau">Tableau</button>
+    <button type="submit" onclick="cg('27')" class="btn btn-primary" id="27" name="27" value="ado.net">ado.net</button>
+    <button type="submit" onclick="cg('28')" class="btn btn-primary" id="28" name="28" value="ssis">SSIS</button><br><br>
+    <button type="submit" onclick="cg('29')" class="btn btn-primary" id="29" name="29" value="jira">Jira</button>
+    <button type="submit" onclick="cg('30')" class="btn btn-primary" id="30" name="30" value="zoho">Zoho</button>
+    <button type="submit" onclick="cg('31')" class="btn btn-primary" id="31" name="31" value="salesforce">Salesforce</button>
+    <button type="submit" onclick="cg('32')" class="btn btn-primary" id="32" name="32" value="freshdesk">Freshdesk</button><br><br>
+    <button type="submit" onclick="cg('33')" class="btn btn-primary" id="33" name="33" value="defect">Defect</button>
+    <button type="submit" onclick="cg('34')" class="btn btn-primary" id="34" name="34" value="support">Support</button>
+    <button type="submit" onclick="cg('35')" class="btn btn-primary" id="35" name="35" value="enhancement">Enhancement</button>
+    <button type="submit" onclick="cg('36')" class="btn btn-primary" id="36" name="36" value="opportunity">Opportunity</button><br><br>
+    <button type="submit" onclick="cg('37')" class="btn btn-primary" id="37" name="37" value="api">API</button>
+    <button type="submit" onclick="cg('38')" class="btn btn-primary" id="38" name="38" value="adp">ADP</button>
+    <button type="submit" onclick="cg('39')" class="btn btn-primary" id="39" name="39" value="aws">AWS</button>
+    <button type="submit" onclick="cg('40')" class="btn btn-primary" id="40" name="40" value="azure">Azure</button><br><br>
+    <button type="submit" onclick="cg('41')" class="btn btn-primary" id="41" name="41" value="crm">CRM</button>
+    <button type="submit" onclick="cg('42')" class="btn btn-primary" id="42" name="42" value="amazon">Amazon</button>
+    <button type="submit" onclick="cg('43')" class="btn btn-primary" id="43" name="43" value="mongo">Mongo</button>
+    <button type="submit" onclick="cg('44')" class="btn btn-primary" id="44" name="44" value="mongodb">Mongodb</button><br><br>
+    <button type="submit" onclick="cg('45')" class="btn btn-primary" id="45" name="45" value="cassandra">Cassandra</button>
+    <button type="submit" onclick="cg('46')" class="btn btn-primary" id="46" name="46" value="dropbox">Dropbox</button>
+    <button type="submit" onclick="cg('47')" class="btn btn-primary" id="47" name="47" value="graphql">Graphql</button>
+    <button type="submit" onclick="cg('48')" class="btn btn-primary" id="48" name="48" value="bigdata">Bigdata</button><br><br>
+    <button type="submit" onclick="cg('49')" class="btn btn-primary" id="49" name="49" value="hadoop">Hadoop</button>
+    <button type="submit" onclick="cg('50')" class="btn btn-primary" id="50" name="50" value="sap">SAP</button>
+    </span> <a onclick="myFunction()" id="myBtn">See all Tags</a>
+                    </form>
+                    <!-- <li class="tags" ><a class="btn btn-primary" href="">Drivers</a></li>
+                <li class="tags" ><a class="btn btn-primary" href="">Server</a></li>
+                <li class="tags" ><a class="btn btn-primary" href="">Connect</a></li><br><br><br>
+                <li class="tags" ><a class="btn btn-primary" href="">Sync</a></li>
+                <li class="tags" ><a class="btn btn-primary" href="">DBAmp</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">automate</a></li><br><br><br>
+                <li class="tags"><a class="btn btn-primary" href="">integrate</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">neo4j</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">java</a></li><br><br><br>
+                <li class="tags"><a class="btn btn-primary" href="">cloud</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">odbc</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">sdk</a></li><br><br><br>
+                <li class="tags"><a class="btn btn-primary" href="">neo4j</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">crm</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">Jira</a></li><br><br><br>
+                <li class="tags"><a class="btn btn-primary" href="">IPaas</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">mongodb</a></li>
+                <li class="tags"><a class="btn btn-primary" href="">salesforce</a></li><br><br><br> -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function myFunction() {
+            var dots = document.getElementById("dots");
+            var moreText = document.getElementById("more");
+            var btnText = document.getElementById("myBtn");
+
+            if (dots.style.display === "none") {
+                dots.style.display = "inline";
+                btnText.innerHTML = "See more tags";
+                moreText.style.display = "none";
+            } else {
+                dots.style.display = "none";
+                btnText.innerHTML = "See less tags";
+                moreText.style.display = "inline";
+            }
+        }
+        // JavaScript code
+        function cg(ig) {
+            // var fired_button = $(this).val();
+            var fired_button = document.getElementById(ig).value;
+            // alert(fired_button);
+            document.getElementById("searchitem").value = fired_button;
+        };
+
+        function search_animal() {
+            let input = document.getElementById('searchitem').value
+            input = input.toLowerCase();
+            let x = document.getElementsByClassName('animals');
+
+            for (i = 0; i < x.length; i++) {
+                if (!x[i].innerHTML.toLowerCase().includes(input)) {
+                    x[i].style.display = "none";
+                } else {
+                    x[i].style.display = "list-item";
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
